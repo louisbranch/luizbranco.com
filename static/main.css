@@ -1,0 +1,21 @@
+html, body {
+  font-family: 'Roboto', 'Helvetica', sans-serif;
+}
+
+i.material-icons {
+  vertical-align: bottom;
+}
+
+.mdl-layout__drawer i {
+  margin-right: 10px;
+}
+
+.mdl-layout__drawer .mdl-navigation .mdl-navigation__link:hover {
+  background-color: #fff;
+  color: #757575 !important;
+}
+
+.lb-layout__content {
+  max-width: 1024px;
+  margin: 20px auto 0;
+}
