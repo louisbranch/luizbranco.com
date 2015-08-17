@@ -10,6 +10,7 @@ i.material-icons {
   margin-right: 10px;
 }
 
+.mdl-layout__drawer .mdl-navigation .mdl-navigation__link.active,
 .mdl-layout__drawer .mdl-navigation .mdl-navigation__link:hover {
   background-color: #fff;
   color: #757575 !important;

@@ -2,3 +2,18 @@ baseurl = "http://luizbranco.com/"
 languageCode = "en-us"
 title = "Luiz Branco - software tinker"
 canonifyurls = true
+[[menu.main]]
+name = "Luiz Branco"
+url = "/"
+pre = "<i class='material-icons'>face</i>"
+weight = 0
+[[menu.main]]
+name = "Code"
+url = "/code/"
+pre = "<i class='material-icons'>code</i>"
+weight = 1
+[[menu.main]]
+name = "Blog"
+url = "/blog/"
+pre = "<i class='material-icons'>chat</i>"
+weight = 2

@@ -1,13 +1,6 @@
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <base href="{{ .Site.BaseURL }}">
-    <title>{{ .Site.Title }}</title>
-    <link rel="stylesheet" href="//storage.googleapis.com/code.getmdl.io/1.0.2/material.blue_grey-orange.min.css" />
-    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="main.css" />
+    {{partial "head.html" .}}
   </head>
   <body>
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
@@ -20,9 +13,13 @@
       </header>
       <div class="mdl-layout__drawer mdl-color--primary">
         <nav class="mdl-navigation">
-          <a class="mdl-navigation__link mdl-color-text--white" href=""><i class="material-icons">face</i>Luiz Branco</a>
-          <a class="mdl-navigation__link mdl-color-text--white" href=""><i class="material-icons">code</i>Code</a>
-          <a class="mdl-navigation__link mdl-color-text--white" href=""><i class="material-icons">chat</i>Blog</a>
+          {{ $currentNode := . }}
+          {{ range .Site.Menus.main }}
+          <a class="mdl-navigation__link mdl-color-text--white{{if or ($currentNode.IsMenuCurrent "main" .) ($currentNode.HasMenuCurrent "main" .) }} active{{end}}" href="{{.URL}}">
+            {{ .Pre }}
+            <span>{{ .Name}}</span>
+          </a>
+          {{ end }}
         </nav>
       </div>
       <main class="mdl-layout__content mdl-color--grey-100">
