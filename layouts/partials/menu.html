@@ -1,8 +1,8 @@
-<div class="mdl-layout__drawer mdl-color--primary">
+<div class="mdl-layout__drawer">
   <nav class="mdl-navigation">
     {{ $currentNode := . }}
     {{ range .Site.Menus.main }}
-    <a class="mdl-navigation__link mdl-color-text--white{{if or ($currentNode.IsMenuCurrent "main" .) ($currentNode.HasMenuCurrent "main" .) }} active{{end}}" href="{{.URL}}">
+    <a class="mdl-navigation__link{{if or ($currentNode.IsMenuCurrent "main" .) ($currentNode.HasMenuCurrent "main" .) }} mdl-navigation__link--current{{end}}" href="{{.URL}}">
       {{ .Pre }}
       <span>{{ .Name}}</span>
     </a>

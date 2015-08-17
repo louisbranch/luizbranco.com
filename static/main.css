@@ -2,21 +2,21 @@ html, body {
   font-family: 'Roboto', 'Helvetica', sans-serif;
 }
 
-i.material-icons {
+.mdl-layout__drawer i.material-icons {
+  margin-right: 10px;
   vertical-align: bottom;
 }
 
-.mdl-layout__drawer i {
-  margin-right: 10px;
-}
-
-.mdl-layout__drawer .mdl-navigation .mdl-navigation__link.active,
-.mdl-layout__drawer .mdl-navigation .mdl-navigation__link:hover {
-  background-color: #fff;
-  color: #757575 !important;
+.mdl-layout__drawer .mdl-navigation .mdl-navigation__link--current {
+  background-color: #ddd;
 }
 
 .lb-layout__content {
   max-width: 1024px;
   margin: 20px auto 0;
+}
+
+/* Bug fix for mobile view */
+.mdl-layout--fixed-drawer>.mdl-layout__header .mdl-layout__header-row {
+  padding-left: 55px;
 }
