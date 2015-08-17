@@ -1,0 +1,11 @@
+<div class="mdl-layout__drawer mdl-color--primary">
+  <nav class="mdl-navigation">
+    {{ $currentNode := . }}
+    {{ range .Site.Menus.main }}
+    <a class="mdl-navigation__link mdl-color-text--white{{if or ($currentNode.IsMenuCurrent "main" .) ($currentNode.HasMenuCurrent "main" .) }} active{{end}}" href="{{.URL}}">
+      {{ .Pre }}
+      <span>{{ .Name}}</span>
+    </a>
+    {{ end }}
+  </nav>
+</div>

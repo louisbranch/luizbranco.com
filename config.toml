@@ -9,11 +9,11 @@ pre = "<i class='material-icons'>face</i>"
 weight = 0
 [[menu.main]]
 name = "Code"
-url = "/code/"
+url = "/project/"
 pre = "<i class='material-icons'>code</i>"
 weight = 1
 [[menu.main]]
 name = "Blog"
-url = "/blog/"
+url = "/post/"
 pre = "<i class='material-icons'>chat</i>"
 weight = 2
