@@ -1,0 +1,30 @@
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="{{ .Site.BaseURL }}"><h1>luizbranco</h1></a>
+      <p class="lead">
+        <i class="material-icons">face</i>
+        Hi, my name is Luiz Branco
+      </p>
+      <p class="lead">
+        <i class="material-icons">code</i>
+        I'm a web developer
+      </p>
+      <p class="lead">
+        <i class="material-icons">place</i>
+        living in Toronto, Canada
+      </p>
+      <p class="lead">
+        <i class="material-icons">email</i>
+        <a href="mailto:me@luizbranco.com">me@luizbranco.com</a> | <a href="http://github.com/luizbranco">github</a>
+      </p>
+    </div>
+
+    <ul class="sidebar-nav">
+      {{ range .Site.Menus.main }}
+        <li><a href="{{.URL}}"> {{ .Name }} </a></li>
+      {{end}}
+    </ul>
+
+  </div>
+</div>
