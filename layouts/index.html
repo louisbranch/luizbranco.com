@@ -18,9 +18,26 @@
             </a>
           </h1>
 
-          <span class="post-date">{{ .Date.Format "2006-01-02" }}</span>
+          <div class="post-details">
+            <ul id="tags">
+              <li>
+                <i class="material-icons">label_outline</i>
+              </li>
+                {{ range .Params.tags }}
+                  <li><a href="tags/{{ . | urlize }}">{{ . }}</a> </li>
+                {{ end }}
+            </ul>
+            <div class="post-date">
+              <i class="material-icons">today</i> {{ .Date.Format "2006-01-02" }}
+            </div>
+          </div>
 
-          {{ .Content }}
+          {{ .Summary }}
+
+          <a href="{{ .Permalink }}">
+            keep reading
+            <i class="material-icons">chevron_right</i>
+          </a>
 
         </div>
 
