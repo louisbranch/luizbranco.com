@@ -151,9 +151,9 @@ it("adds a new task", function(done){
 still a working in progress. It removes every non-essential part of the tool and
 simplify its design:
 
-* Instead of a database it used a regular file to store the daily log. This allows
-offline access, privacy, easy backup and sharing the same ``.gtt`` file using
-symbolic links;
+* Instead of a database it uses a regular file to store the daily log. This
+  allows offline access, privacy, easy backup and sharing the same ``.gtt`` file
+using symbolic links;
 
 * The invoice generation is also embedded in the application and it allows
   custom date ranges. Up to version 2 only full months were allowed;
