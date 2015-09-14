@@ -1,6 +1,6 @@
 +++
 date = "2015-09-09T01:44:22-04:00"
-title = "Go benchmark example"
+title = "Benchmarking Go code"
 tags = ["go", "testing"]
 +++
 
@@ -93,7 +93,7 @@ func BenchmarkGobRoundTrip(b *testing.B) {
 
 To run all benchmarks on a single file:
 
- `go test -bench=. filename_test.go`
+ `go test -bench . filename_test.go`
 
 ## The Result
 
@@ -111,5 +111,5 @@ of magnitude faster than JSON. However, there are
 [others](https://github.com/pquerna/ffjson) packages that offer better
 performance than `encoding/json`.
 
-Go benchmarks is a very handy tool, so use it to explore different algorithms
+Go benchmark is a very handy tool, so use it to explore different algorithms
 and implementations.
