@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Testing on Luiz Branco - software tinkerer</title>
+    <link>http://luizbranco.com/tags/testing/</link>
+    <description>Recent content in Testing on Luiz Branco - software tinkerer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 09 Sep 2015 01:44:22 -0400</lastBuildDate>
+    <atom:link href="http://luizbranco.com/tags/testing/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Benchmarking Go code</title>
+      <link>http://luizbranco.com/post/go-benchmark/</link>
+      <pubDate>Wed, 09 Sep 2015 01:44:22 -0400</pubDate>
+      
+      <guid>http://luizbranco.com/post/go-benchmark/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; Go benchmark is a special kind of test that you can use to profile
+your code and to compare performance of different implementations.&lt;/p&gt;
+
+&lt;p&gt;When I first ported &lt;a href=&#34;http://github.com/luizbranco/gtt&#34;&gt;gtt&lt;/a&gt; from javascript to
+go, I kept serializing the data to a file using JSON. The reason was more about
+familiarity with JSON than allowing it to be human readable or expecting anyone
+to edit the file by hand.&lt;/p&gt;
+
+&lt;p&gt;Go standard library ships with its own encoding format called
+&lt;a href=&#34;https://golang.org/pkg/encoding/gob/&#34;&gt;gob&lt;/a&gt; (Go&amp;rsquo;s binary). Migrating from one
+format to the other is pretty simple because both gob and JSON implement the
+Encode/Decode interfaces.&lt;/p&gt;
+
+&lt;h2 id=&#34;comparing-json-and-gob-performance:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;Comparing JSON and gob performance&lt;/h2&gt;
+
+&lt;p&gt;Before switching the encoding, I decided to run a small benchmark, encoding and
+decoding a simple struct similar to what I have on my project. Benchmarks in go
+are very similar to regular tests. The main differences from a test function are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;It needs to start with &lt;strong&gt;Benchmark&lt;/strong&gt;, in our example:
+&lt;code&gt;BenchmarkJsonRoundTrip&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It receives a &lt;code&gt;*testing.B&lt;/code&gt; as the function argument, instead of the
+regular &lt;code&gt;*testing.T&lt;/code&gt;. Both share a common struct underneath responsible
+for most of the methods, like &lt;code&gt;Errorf&lt;/code&gt; or &lt;code&gt;Fail&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It runs &lt;code&gt;b.N&lt;/code&gt; times where N is a multiple of 10 big
+enough to reach the required time. By default each benchmark runs for
+at least 1 second. That can be changed using cmdline flags during the test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;benchmark-example:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;Benchmark example&lt;/h2&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;bytes&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encoding/gob&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encoding/json&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;testing&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Name&lt;/span&gt;  &lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;ID&lt;/span&gt;    &lt;span style=&#34;color: #66d9ef&#34;&gt;int&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Tasks&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;[]&lt;/span&gt;&lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Name&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;  &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Test&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;ID&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;    &lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Tasks&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;[]&lt;/span&gt;&lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;one&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;two&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;three&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;},&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;BenchmarkJsonRoundTrip&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;testing&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;B&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;N&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;bytes&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Buffer&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;json&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewEncoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;json&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewDecoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Encode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{}&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Decode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;decode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;BenchmarkGobRoundTrip&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;testing&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;B&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;N&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;bytes&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Buffer&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;gob&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewEncoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;gob&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewDecoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Encode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{}&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Decode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;decode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To run all benchmarks on a single file:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;go test -bench . filename_test.go&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;the-result:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;The Result&lt;/h2&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;PASS
+BenchmarkJsonRoundTrip-8     &lt;span style=&#34;color: #ae81ff&#34;&gt;300000&lt;/span&gt;         &lt;span style=&#34;color: #ae81ff&#34;&gt;5332&lt;/span&gt; ns/op
+BenchmarkGobRoundTrip-8      &lt;span style=&#34;color: #ae81ff&#34;&gt;30000&lt;/span&gt;         &lt;span style=&#34;color: #ae81ff&#34;&gt;46206&lt;/span&gt; ns/op
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The number in the middle informs how many times each benchmark ran (its &lt;code&gt;N&lt;/code&gt;).
+The last number is the time spent per operation, in this case in nanoseconds.&lt;/p&gt;
+
+&lt;p&gt;Although the struct tested is really simple, gob in this benchmark is one order
+of magnitude faster than JSON. However, there are
+&lt;a href=&#34;https://github.com/pquerna/ffjson&#34;&gt;others&lt;/a&gt; packages that offer better
+performance than &lt;code&gt;encoding/json&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Go benchmark is a very handy tool, so use it to explore different algorithms
+and implementations.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,190 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="http://luizbranco.com/">
+<title>Luiz Branco - software tinkerer</title>
+<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="http://luizbranco.com/css/main.css" />
+
+  </head>
+	<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="http://luizbranco.com/">
+<title>Luiz Branco - software tinkerer</title>
+<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="http://luizbranco.com/css/main.css" />
+
+	<body class="">
+		<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="http://luizbranco.com/">
+        <h1>luizbranco</h1>
+      </a>
+      <blockquote>"I tink, therefore I am"</blockquote>
+      <p class="lead">
+        <i class="material-icons">face</i>
+        Hi, my name is Luiz Branco
+      </p>
+      <p class="lead">
+        <i class="material-icons">code</i>
+        I'm a software developer
+      </p>
+      <p class="lead">
+        <i class="material-icons">place</i>
+        living in Toronto, Canada
+      </p>
+      <p class="lead">
+        <i class="material-icons">email</i>
+        <a href="mailto:me@luizbranco.com">me@luizbranco.com</a> | <a href="http://github.com/luizbranco">github</a>
+      </p>
+    </div>
+
+    <ul class="sidebar-nav">
+      
+    </ul>
+
+  </div>
+</div>
+
+
+		<div class="content container">
+			<div class="post">
+			 	<h1 class="post-title">Benchmarking Go code</h1>
+        <div class="post-details">
+          <ul id="tags">
+            <li>
+              <i class="material-icons">label_outline</i>
+            </li>
+              
+                <li><a href="tags/go">go</a> </li>
+              
+                <li><a href="tags/testing">testing</a> </li>
+              
+          </ul>
+          <div class="post-date">
+            <i class="material-icons">today</i> 2015-09-09
+          </div>
+        </div>
+        
+
+<p><strong>TL/DR</strong> Go benchmark is a special kind of test that you can use to profile
+your code and to compare performance of different implementations.</p>
+
+<p>When I first ported <a href="http://github.com/luizbranco/gtt">gtt</a> from javascript to
+go, I kept serializing the data to a file using JSON. The reason was more about
+familiarity with JSON than allowing it to be human readable or expecting anyone
+to edit the file by hand.</p>
+
+<p>Go standard library ships with its own encoding format called
+<a href="https://golang.org/pkg/encoding/gob/">gob</a> (Go&rsquo;s binary). Migrating from one
+format to the other is pretty simple because both gob and JSON implement the
+Encode/Decode interfaces.</p>
+
+<h2 id="comparing-json-and-gob-performance:bb8625f0e310cd1c1029e55b9156b239">Comparing JSON and gob performance</h2>
+
+<p>Before switching the encoding, I decided to run a small benchmark, encoding and
+decoding a simple struct similar to what I have on my project. Benchmarks in go
+are very similar to regular tests. The main differences from a test function are:</p>
+
+<ul>
+<li><p>It needs to start with <strong>Benchmark</strong>, in our example:
+<code>BenchmarkJsonRoundTrip</code>.</p></li>
+
+<li><p>It receives a <code>*testing.B</code> as the function argument, instead of the
+regular <code>*testing.T</code>. Both share a common struct underneath responsible
+for most of the methods, like <code>Errorf</code> or <code>Fail</code>.</p></li>
+
+<li><p>It runs <code>b.N</code> times where N is a multiple of 10 big
+enough to reach the required time. By default each benchmark runs for
+at least 1 second. That can be changed using cmdline flags during the test.</p></li>
+</ul>
+
+<h2 id="benchmark-example:bb8625f0e310cd1c1029e55b9156b239">Benchmark example</h2>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #f92672">package</span> <span style="color: #a6e22e">main</span>
+
+<span style="color: #f92672">import</span> <span style="color: #f8f8f2">(</span>
+	<span style="color: #e6db74">&quot;bytes&quot;</span>
+	<span style="color: #e6db74">&quot;encoding/gob&quot;</span>
+	<span style="color: #e6db74">&quot;encoding/json&quot;</span>
+	<span style="color: #e6db74">&quot;testing&quot;</span>
+<span style="color: #f8f8f2">)</span>
+
+<span style="color: #66d9ef">type</span> <span style="color: #a6e22e">Project</span> <span style="color: #66d9ef">struct</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #a6e22e">Name</span>  <span style="color: #66d9ef">string</span>
+	<span style="color: #a6e22e">ID</span>    <span style="color: #66d9ef">int</span>
+	<span style="color: #a6e22e">Tasks</span> <span style="color: #f8f8f2">[]</span><span style="color: #66d9ef">string</span>
+<span style="color: #f8f8f2">}</span>
+
+<span style="color: #66d9ef">var</span> <span style="color: #a6e22e">p</span> <span style="color: #f8f8f2">=</span> <span style="color: #a6e22e">Project</span><span style="color: #f8f8f2">{</span>
+	<span style="color: #a6e22e">Name</span><span style="color: #f8f8f2">:</span>  <span style="color: #e6db74">&quot;Test&quot;</span><span style="color: #f8f8f2">,</span>
+	<span style="color: #a6e22e">ID</span><span style="color: #f8f8f2">:</span>    <span style="color: #ae81ff">1</span><span style="color: #f8f8f2">,</span>
+	<span style="color: #a6e22e">Tasks</span><span style="color: #f8f8f2">:</span> <span style="color: #f8f8f2">[]</span><span style="color: #66d9ef">string</span><span style="color: #f8f8f2">{</span><span style="color: #e6db74">&quot;one&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;two&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;three&quot;</span><span style="color: #f8f8f2">},</span>
+<span style="color: #f8f8f2">}</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">BenchmarkJsonRoundTrip</span><span style="color: #f8f8f2">(</span><span style="color: #a6e22e">b</span> <span style="color: #f92672">*</span><span style="color: #a6e22e">testing</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">B</span><span style="color: #f8f8f2">)</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">for</span> <span style="color: #a6e22e">i</span> <span style="color: #f92672">:=</span> <span style="color: #ae81ff">0</span><span style="color: #f8f8f2">;</span> <span style="color: #a6e22e">i</span> <span style="color: #f8f8f2">&lt;</span> <span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">N</span><span style="color: #f8f8f2">;</span> <span style="color: #a6e22e">i</span><span style="color: #f92672">++</span> <span style="color: #f8f8f2">{</span>
+		<span style="color: #66d9ef">var</span> <span style="color: #a6e22e">file</span> <span style="color: #a6e22e">bytes</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Buffer</span>
+		<span style="color: #a6e22e">enc</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">json</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewEncoder</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">file</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">dec</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">json</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewDecoder</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">file</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #66d9ef">if</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">enc</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Encode</span><span style="color: #f8f8f2">(</span><span style="color: #a6e22e">p</span><span style="color: #f8f8f2">);</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">!=</span> <span style="color: #66d9ef">nil</span> <span style="color: #f8f8f2">{</span>
+			<span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Errorf</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;encode error: %s&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">err</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #f8f8f2">}</span>
+		<span style="color: #a6e22e">p2</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">Project</span><span style="color: #f8f8f2">{}</span>
+		<span style="color: #66d9ef">if</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">dec</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Decode</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">p2</span><span style="color: #f8f8f2">);</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">!=</span> <span style="color: #66d9ef">nil</span> <span style="color: #f8f8f2">{</span>
+			<span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Errorf</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;decode error: %s&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">err</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #f8f8f2">}</span>
+	<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">BenchmarkGobRoundTrip</span><span style="color: #f8f8f2">(</span><span style="color: #a6e22e">b</span> <span style="color: #f92672">*</span><span style="color: #a6e22e">testing</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">B</span><span style="color: #f8f8f2">)</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">for</span> <span style="color: #a6e22e">i</span> <span style="color: #f92672">:=</span> <span style="color: #ae81ff">0</span><span style="color: #f8f8f2">;</span> <span style="color: #a6e22e">i</span> <span style="color: #f8f8f2">&lt;</span> <span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">N</span><span style="color: #f8f8f2">;</span> <span style="color: #a6e22e">i</span><span style="color: #f92672">++</span> <span style="color: #f8f8f2">{</span>
+		<span style="color: #66d9ef">var</span> <span style="color: #a6e22e">file</span> <span style="color: #a6e22e">bytes</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Buffer</span>
+		<span style="color: #a6e22e">enc</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">gob</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewEncoder</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">file</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">dec</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">gob</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewDecoder</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">file</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #66d9ef">if</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">enc</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Encode</span><span style="color: #f8f8f2">(</span><span style="color: #a6e22e">p</span><span style="color: #f8f8f2">);</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">!=</span> <span style="color: #66d9ef">nil</span> <span style="color: #f8f8f2">{</span>
+			<span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Errorf</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;encode error: %s&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">err</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #f8f8f2">}</span>
+		<span style="color: #a6e22e">p2</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">Project</span><span style="color: #f8f8f2">{}</span>
+		<span style="color: #66d9ef">if</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">dec</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Decode</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">&amp;</span><span style="color: #a6e22e">p2</span><span style="color: #f8f8f2">);</span> <span style="color: #a6e22e">err</span> <span style="color: #f92672">!=</span> <span style="color: #66d9ef">nil</span> <span style="color: #f8f8f2">{</span>
+			<span style="color: #a6e22e">b</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Errorf</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;decode error: %s&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">err</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #f8f8f2">}</span>
+	<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+<p>To run all benchmarks on a single file:</p>
+
+<p><code>go test -bench . filename_test.go</code></p>
+
+<h2 id="the-result:bb8625f0e310cd1c1029e55b9156b239">The Result</h2>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%">PASS
+BenchmarkJsonRoundTrip-8     <span style="color: #ae81ff">300000</span>         <span style="color: #ae81ff">5332</span> ns/op
+BenchmarkGobRoundTrip-8      <span style="color: #ae81ff">30000</span>         <span style="color: #ae81ff">46206</span> ns/op
+</pre></div>
+
+
+<p>The number in the middle informs how many times each benchmark ran (its <code>N</code>).
+The last number is the time spent per operation, in this case in nanoseconds.</p>
+
+<p>Although the struct tested is really simple, gob in this benchmark is one order
+of magnitude faster than JSON. However, there are
+<a href="https://github.com/pquerna/ffjson">others</a> packages that offer better
+performance than <code>encoding/json</code>.</p>
+
+<p>Go benchmark is a very handy tool, so use it to explore different algorithms
+and implementations.</p>
+
+			</div>
+		</div>
+
+  </body>
+</html>

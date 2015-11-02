@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://luizbranco.com/</loc>
+    <lastmod>2015-09-13T17:57:28-03:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://luizbranco.com/post/go-flagset/</loc>
+    <lastmod>2015-09-13T17:57:28-03:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://luizbranco.com/post/go-benchmark/</loc>
+    <lastmod>2015-09-09T01:44:22-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://luizbranco.com/post/android-backup/</loc>
+    <lastmod>2015-08-31T16:12:37-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://luizbranco.com/post/gtt/</loc>
+    <lastmod>2015-08-16T20:26:20-04:00</lastmod>
+  </url>
+  
+</urlset>

@@ -1,0 +1,232 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="http://luizbranco.com/">
+<title>Luiz Branco - software tinkerer</title>
+<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="http://luizbranco.com/css/main.css" />
+
+  </head>
+	<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="http://luizbranco.com/">
+<title>Luiz Branco - software tinkerer</title>
+<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="http://luizbranco.com/css/main.css" />
+
+	<body class="">
+		<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="http://luizbranco.com/">
+        <h1>luizbranco</h1>
+      </a>
+      <blockquote>"I tink, therefore I am"</blockquote>
+      <p class="lead">
+        <i class="material-icons">face</i>
+        Hi, my name is Luiz Branco
+      </p>
+      <p class="lead">
+        <i class="material-icons">code</i>
+        I'm a software developer
+      </p>
+      <p class="lead">
+        <i class="material-icons">place</i>
+        living in Toronto, Canada
+      </p>
+      <p class="lead">
+        <i class="material-icons">email</i>
+        <a href="mailto:me@luizbranco.com">me@luizbranco.com</a> | <a href="http://github.com/luizbranco">github</a>
+      </p>
+    </div>
+
+    <ul class="sidebar-nav">
+      
+    </ul>
+
+  </div>
+</div>
+
+
+		<div class="content container">
+			<div class="post">
+			 	<h1 class="post-title">Using Go os.Args and FlagSet to create cmdline subcommands</h1>
+        <div class="post-details">
+          <ul id="tags">
+            <li>
+              <i class="material-icons">label_outline</i>
+            </li>
+              
+                <li><a href="tags/go">go</a> </li>
+              
+                <li><a href="tags/cmdline">cmdline</a> </li>
+              
+          </ul>
+          <div class="post-date">
+            <i class="material-icons">today</i> 2015-09-13
+          </div>
+        </div>
+        
+
+<p><strong>TL/DR</strong> With Go <code>flag</code> package is very easy to define and parse global command
+line options. However, if your application needs subcommands, using OS args and
+creating flag sets is great way to define options for each subcommand.</p>
+
+<p>Imagine if you want to create a clone of <a href="http://taskwarrior.org/">taskwarrior</a>
+with <code>task add</code> and <code>task remove</code> as subcommands. The first step is to parse the
+command line arguments to discover which subcommand the user is trying to
+access.</p>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #f92672">package</span> <span style="color: #a6e22e">main</span>
+
+<span style="color: #f92672">import</span> <span style="color: #f8f8f2">(</span>
+	<span style="color: #e6db74">&quot;fmt&quot;</span>
+	<span style="color: #e6db74">&quot;os&quot;</span>
+<span style="color: #f8f8f2">)</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">main</span><span style="color: #f8f8f2">()</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">len(</span><span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Args</span><span style="color: #f8f8f2">)</span> <span style="color: #f8f8f2">&lt;</span> <span style="color: #ae81ff">2</span> <span style="color: #f8f8f2">{</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Command missing&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Exit</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #f8f8f2">}</span>
+
+	<span style="color: #66d9ef">switch</span> <span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Args</span><span style="color: #f8f8f2">[</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">]</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">case</span> <span style="color: #e6db74">&quot;add&quot;</span><span style="color: #f8f8f2">:</span>
+		<span style="color: #75715e">// add a task</span>
+	<span style="color: #66d9ef">case</span> <span style="color: #e6db74">&quot;remove&quot;</span><span style="color: #f8f8f2">:</span>
+		<span style="color: #75715e">// remove a task</span>
+	<span style="color: #66d9ef">default</span><span style="color: #f8f8f2">:</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Command not defined&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Exit</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+<p><code>os.Args</code> is a string slice with the commands passed from the command line. The
+first element, <code>os.Args[0]</code>, is always the name of the program. To get the
+subcommand, you must first verify that there is indeed at least a second
+argument, otherwise accessing the second element would be out bounds and crash
+the program. A switch over <code>os.Args[1]</code> is a quick way to accomplish that. It
+is always a good practice to add a default case to handle unknown inputs.</p>
+
+<h2 id="global-flags:7d2196bfb2b7ebc0e535c8bfbaa2cc4f">Global Flags</h2>
+
+<p>The <code>flag</code> package is very handy to define command line flags, such as <code>-v</code> or
+<code>--source=test</code>. Flags are important even if your program is not a command line
+application, because it allows you to inject information after compile time. If
+you are creating a web service, for example, the port number and an api secret
+could be passed from the command line.</p>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #f92672">package</span> <span style="color: #a6e22e">main</span>
+
+<span style="color: #f92672">import</span> <span style="color: #f8f8f2">(</span>
+	<span style="color: #e6db74">&quot;flag&quot;</span>
+	<span style="color: #e6db74">&quot;fmt&quot;</span>
+<span style="color: #f8f8f2">)</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">main</span><span style="color: #f8f8f2">()</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #a6e22e">port</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">String</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;port&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;8080&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;Server port&quot;</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Parse</span><span style="color: #f8f8f2">()</span>
+	<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Printf</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Running on port %s\n&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #f92672">*</span><span style="color: #a6e22e">port</span><span style="color: #f8f8f2">)</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+<p>Both short and long flags are defined by default, so there is no difference
+between <code>task -port 8080</code> and <code>task --port 8080</code>.</p>
+
+<p>The flag package also adds little goodies when you call <code>Parse</code>. The first one
+is a default help text that shows by calling the program with <code>-h</code> or <code>-help</code>.
+The second one is a warning when flags that are not defined are called.</p>
+
+<p>You cannot, however, define a flag as required. If a flag is vital for your
+program, you must validate and throw an error manually.</p>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #f92672">package</span> <span style="color: #a6e22e">main</span>
+
+<span style="color: #f92672">import</span> <span style="color: #f8f8f2">(</span>
+	<span style="color: #e6db74">&quot;flag&quot;</span>
+	<span style="color: #e6db74">&quot;fmt&quot;</span>
+	<span style="color: #e6db74">&quot;os&quot;</span>
+<span style="color: #f8f8f2">)</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">main</span><span style="color: #f8f8f2">()</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #a6e22e">secret</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">String</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;api-secret&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;API secret for Foo service&quot;</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Parse</span><span style="color: #f8f8f2">()</span>
+	<span style="color: #66d9ef">if</span> <span style="color: #f92672">*</span><span style="color: #a6e22e">secret</span> <span style="color: #f92672">==</span> <span style="color: #e6db74">&quot;&quot;</span> <span style="color: #f8f8f2">{</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;--api-secret is required&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Exit</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+<h2 id="flag-sets:7d2196bfb2b7ebc0e535c8bfbaa2cc4f">Flag Sets</h2>
+
+<p>When you call <code>flag.String(...)</code> and <code>flag.Parse()</code> you are actually using a
+global flag set defined inside the <code>flag</code> package. If you need more control over
+the flags, like setting error behaviors for example, creating you own flag
+set(s) is the way to go.</p>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #f92672">package</span> <span style="color: #a6e22e">main</span>
+
+<span style="color: #f92672">import</span> <span style="color: #f8f8f2">(</span>
+	<span style="color: #e6db74">&quot;flag&quot;</span>
+	<span style="color: #e6db74">&quot;fmt&quot;</span>
+	<span style="color: #e6db74">&quot;os&quot;</span>
+<span style="color: #f8f8f2">)</span>
+
+<span style="color: #66d9ef">func</span> <span style="color: #a6e22e">main</span><span style="color: #f8f8f2">()</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">len(</span><span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Args</span><span style="color: #f8f8f2">)</span> <span style="color: #f8f8f2">&lt;</span> <span style="color: #ae81ff">2</span> <span style="color: #f8f8f2">{</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Command missing&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Exit</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #f8f8f2">}</span>
+
+	<span style="color: #66d9ef">switch</span> <span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Args</span><span style="color: #f8f8f2">[</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">]</span> <span style="color: #f8f8f2">{</span>
+	<span style="color: #66d9ef">case</span> <span style="color: #e6db74">&quot;add&quot;</span><span style="color: #f8f8f2">:</span>
+		<span style="color: #a6e22e">f</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewFlagSet</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;add&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">ExitOnError</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">tag</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">f</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">String</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;tag&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #e6db74">&quot;Default task tag&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">f</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Parse</span><span style="color: #f8f8f2">(</span><span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Args</span><span style="color: #f8f8f2">[</span><span style="color: #ae81ff">2</span><span style="color: #f8f8f2">:])</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #f92672">*</span><span style="color: #a6e22e">tag</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #66d9ef">default</span><span style="color: #f8f8f2">:</span>
+		<span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Command not defined&quot;</span><span style="color: #f8f8f2">)</span>
+		<span style="color: #a6e22e">os</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Exit</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1</span><span style="color: #f8f8f2">)</span>
+	<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+<p>Using flag sets is good way to isolate flag options by subcommand. In this case,
+the <code>--tag</code> flag is only valid for the <code>add</code> subcommand. When using a set, the
+<code>Parse</code> method needs a string slice to operate on. Usually you will pass a
+subset of the <code>os.Args</code> removing the parts already parsed, in this case the
+os.Args 0 and 1.</p>
+
+<h2 id="helping-users:7d2196bfb2b7ebc0e535c8bfbaa2cc4f">Helping users</h2>
+
+<p>By default each flag set has a built-in helper text, listing all the flags
+available, their default values and description. As state above, the help
+information appears by passing <code>-h</code> to the program or you can show
+programmatically by calling <code>f.PrintDefaults</code>.</p>
+
+<p>To create a custom error message when the parsing fails, you can reassign the
+<code>Usage</code> function from the flag set:</p>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span style="color: #a6e22e">f</span> <span style="color: #f92672">:=</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">NewFlagSet</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;add&quot;</span><span style="color: #f8f8f2">,</span> <span style="color: #a6e22e">flag</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">ExitOnError</span><span style="color: #f8f8f2">)</span>
+<span style="color: #a6e22e">f</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Usage</span> <span style="color: #f8f8f2">=</span> <span style="color: #66d9ef">func</span><span style="color: #f8f8f2">()</span> <span style="color: #f8f8f2">{</span>
+  <span style="color: #a6e22e">fmt</span><span style="color: #f8f8f2">.</span><span style="color: #a6e22e">Println</span><span style="color: #f8f8f2">(</span><span style="color: #e6db74">&quot;Help me, Obi-Wan Kenobi.&quot;</span><span style="color: #f8f8f2">)</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+
+			</div>
+		</div>
+
+  </body>
+</html>

@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Luiz Branco - software tinkerer</title>
+    <link>http://luizbranco.com/</link>
+    <description>Recent content on Luiz Branco - software tinkerer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 13 Sep 2015 17:57:28 -0300</lastBuildDate>
+    <atom:link href="http://luizbranco.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using Go os.Args and FlagSet to create cmdline subcommands</title>
+      <link>http://luizbranco.com/post/go-flagset/</link>
+      <pubDate>Sun, 13 Sep 2015 17:57:28 -0300</pubDate>
+      
+      <guid>http://luizbranco.com/post/go-flagset/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; With Go &lt;code&gt;flag&lt;/code&gt; package is very easy to define and parse global command
+line options. However, if your application needs subcommands, using OS args and
+creating flag sets is great way to define options for each subcommand.&lt;/p&gt;
+
+&lt;p&gt;Imagine if you want to create a clone of &lt;a href=&#34;http://taskwarrior.org/&#34;&gt;taskwarrior&lt;/a&gt;
+with &lt;code&gt;task add&lt;/code&gt; and &lt;code&gt;task remove&lt;/code&gt; as subcommands. The first step is to parse the
+command line arguments to discover which subcommand the user is trying to
+access.&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;os&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;len(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Args&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Command missing&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Exit&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;switch&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Args&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;]&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;case&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;add&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;
+		&lt;span style=&#34;color: #75715e&#34;&gt;// add a task&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;case&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;remove&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;
+		&lt;span style=&#34;color: #75715e&#34;&gt;// remove a task&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;default&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Command not defined&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Exit&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;os.Args&lt;/code&gt; is a string slice with the commands passed from the command line. The
+first element, &lt;code&gt;os.Args[0]&lt;/code&gt;, is always the name of the program. To get the
+subcommand, you must first verify that there is indeed at least a second
+argument, otherwise accessing the second element would be out bounds and crash
+the program. A switch over &lt;code&gt;os.Args[1]&lt;/code&gt; is a quick way to accomplish that. It
+is always a good practice to add a default case to handle unknown inputs.&lt;/p&gt;
+
+&lt;h2 id=&#34;global-flags:7d2196bfb2b7ebc0e535c8bfbaa2cc4f&#34;&gt;Global Flags&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;flag&lt;/code&gt; package is very handy to define command line flags, such as &lt;code&gt;-v&lt;/code&gt; or
+&lt;code&gt;--source=test&lt;/code&gt;. Flags are important even if your program is not a command line
+application, because it allows you to inject information after compile time. If
+you are creating a web service, for example, the port number and an api secret
+could be passed from the command line.&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;flag&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;port&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;String&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;port&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;8080&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Server port&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Parse&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Printf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Running on port %s\n&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;port&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Both short and long flags are defined by default, so there is no difference
+between &lt;code&gt;task -port 8080&lt;/code&gt; and &lt;code&gt;task --port 8080&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The flag package also adds little goodies when you call &lt;code&gt;Parse&lt;/code&gt;. The first one
+is a default help text that shows by calling the program with &lt;code&gt;-h&lt;/code&gt; or &lt;code&gt;-help&lt;/code&gt;.
+The second one is a warning when flags that are not defined are called.&lt;/p&gt;
+
+&lt;p&gt;You cannot, however, define a flag as required. If a flag is vital for your
+program, you must validate and throw an error manually.&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;flag&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;os&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;secret&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;String&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;api-secret&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;API secret for Foo service&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Parse&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;secret&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;--api-secret is required&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Exit&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id=&#34;flag-sets:7d2196bfb2b7ebc0e535c8bfbaa2cc4f&#34;&gt;Flag Sets&lt;/h2&gt;
+
+&lt;p&gt;When you call &lt;code&gt;flag.String(...)&lt;/code&gt; and &lt;code&gt;flag.Parse()&lt;/code&gt; you are actually using a
+global flag set defined inside the &lt;code&gt;flag&lt;/code&gt; package. If you need more control over
+the flags, like setting error behaviors for example, creating you own flag
+set(s) is the way to go.&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;flag&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;os&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;len(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Args&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Command missing&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Exit&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;switch&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Args&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;]&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;case&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;add&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;f&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewFlagSet&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;add&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;ExitOnError&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;tag&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;f&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;String&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;tag&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Default task tag&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;f&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Parse&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Args&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:])&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;default&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Command not defined&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;os&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Exit&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Using flag sets is good way to isolate flag options by subcommand. In this case,
+the &lt;code&gt;--tag&lt;/code&gt; flag is only valid for the &lt;code&gt;add&lt;/code&gt; subcommand. When using a set, the
+&lt;code&gt;Parse&lt;/code&gt; method needs a string slice to operate on. Usually you will pass a
+subset of the &lt;code&gt;os.Args&lt;/code&gt; removing the parts already parsed, in this case the
+os.Args 0 and 1.&lt;/p&gt;
+
+&lt;h2 id=&#34;helping-users:7d2196bfb2b7ebc0e535c8bfbaa2cc4f&#34;&gt;Helping users&lt;/h2&gt;
+
+&lt;p&gt;By default each flag set has a built-in helper text, listing all the flags
+available, their default values and description. As state above, the help
+information appears by passing &lt;code&gt;-h&lt;/code&gt; to the program or you can show
+programmatically by calling &lt;code&gt;f.PrintDefaults&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To create a custom error message when the parsing fails, you can reassign the
+&lt;code&gt;Usage&lt;/code&gt; function from the flag set:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;f&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewFlagSet&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;add&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;flag&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;ExitOnError&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+&lt;span style=&#34;color: #a6e22e&#34;&gt;f&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Usage&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+  &lt;span style=&#34;color: #a6e22e&#34;&gt;fmt&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Println&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Help me, Obi-Wan Kenobi.&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+</description>
+    </item>
+    
+    <item>
+      <title>Benchmarking Go code</title>
+      <link>http://luizbranco.com/post/go-benchmark/</link>
+      <pubDate>Wed, 09 Sep 2015 01:44:22 -0400</pubDate>
+      
+      <guid>http://luizbranco.com/post/go-benchmark/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; Go benchmark is a special kind of test that you can use to profile
+your code and to compare performance of different implementations.&lt;/p&gt;
+
+&lt;p&gt;When I first ported &lt;a href=&#34;http://github.com/luizbranco/gtt&#34;&gt;gtt&lt;/a&gt; from javascript to
+go, I kept serializing the data to a file using JSON. The reason was more about
+familiarity with JSON than allowing it to be human readable or expecting anyone
+to edit the file by hand.&lt;/p&gt;
+
+&lt;p&gt;Go standard library ships with its own encoding format called
+&lt;a href=&#34;https://golang.org/pkg/encoding/gob/&#34;&gt;gob&lt;/a&gt; (Go&amp;rsquo;s binary). Migrating from one
+format to the other is pretty simple because both gob and JSON implement the
+Encode/Decode interfaces.&lt;/p&gt;
+
+&lt;h2 id=&#34;comparing-json-and-gob-performance:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;Comparing JSON and gob performance&lt;/h2&gt;
+
+&lt;p&gt;Before switching the encoding, I decided to run a small benchmark, encoding and
+decoding a simple struct similar to what I have on my project. Benchmarks in go
+are very similar to regular tests. The main differences from a test function are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;It needs to start with &lt;strong&gt;Benchmark&lt;/strong&gt;, in our example:
+&lt;code&gt;BenchmarkJsonRoundTrip&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It receives a &lt;code&gt;*testing.B&lt;/code&gt; as the function argument, instead of the
+regular &lt;code&gt;*testing.T&lt;/code&gt;. Both share a common struct underneath responsible
+for most of the methods, like &lt;code&gt;Errorf&lt;/code&gt; or &lt;code&gt;Fail&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It runs &lt;code&gt;b.N&lt;/code&gt; times where N is a multiple of 10 big
+enough to reach the required time. By default each benchmark runs for
+at least 1 second. That can be changed using cmdline flags during the test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;benchmark-example:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;Benchmark example&lt;/h2&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;main&lt;/span&gt;
+
+&lt;span style=&#34;color: #f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;bytes&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encoding/gob&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encoding/json&amp;quot;&lt;/span&gt;
+	&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;testing&amp;quot;&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Name&lt;/span&gt;  &lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;ID&lt;/span&gt;    &lt;span style=&#34;color: #66d9ef&#34;&gt;int&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Tasks&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;[]&lt;/span&gt;&lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Name&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;  &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Test&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;ID&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt;    &lt;span style=&#34;color: #ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt;
+	&lt;span style=&#34;color: #a6e22e&#34;&gt;Tasks&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;[]&lt;/span&gt;&lt;span style=&#34;color: #66d9ef&#34;&gt;string&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;one&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;two&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;three&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;},&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;BenchmarkJsonRoundTrip&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;testing&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;B&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;N&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;bytes&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Buffer&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;json&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewEncoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;json&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewDecoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Encode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{}&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Decode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;decode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+
+&lt;span style=&#34;color: #66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;BenchmarkGobRoundTrip&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;testing&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;B&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+	&lt;span style=&#34;color: #66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;N&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;;&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;i&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;bytes&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Buffer&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;gob&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewEncoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;gob&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;NewDecoder&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;file&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;enc&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Encode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;encode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+		&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;Project&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;{}&lt;/span&gt;
+		&lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;dec&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Decode&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;p2&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;nil&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+			&lt;span style=&#34;color: #a6e22e&#34;&gt;b&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;Errorf&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;decode error: %s&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;err&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt;
+		&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+	&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To run all benchmarks on a single file:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;go test -bench . filename_test.go&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;the-result:bb8625f0e310cd1c1029e55b9156b239&#34;&gt;The Result&lt;/h2&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;PASS
+BenchmarkJsonRoundTrip-8     &lt;span style=&#34;color: #ae81ff&#34;&gt;300000&lt;/span&gt;         &lt;span style=&#34;color: #ae81ff&#34;&gt;5332&lt;/span&gt; ns/op
+BenchmarkGobRoundTrip-8      &lt;span style=&#34;color: #ae81ff&#34;&gt;30000&lt;/span&gt;         &lt;span style=&#34;color: #ae81ff&#34;&gt;46206&lt;/span&gt; ns/op
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The number in the middle informs how many times each benchmark ran (its &lt;code&gt;N&lt;/code&gt;).
+The last number is the time spent per operation, in this case in nanoseconds.&lt;/p&gt;
+
+&lt;p&gt;Although the struct tested is really simple, gob in this benchmark is one order
+of magnitude faster than JSON. However, there are
+&lt;a href=&#34;https://github.com/pquerna/ffjson&#34;&gt;others&lt;/a&gt; packages that offer better
+performance than &lt;code&gt;encoding/json&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Go benchmark is a very handy tool, so use it to explore different algorithms
+and implementations.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Android backup using MTP</title>
+      <link>http://luizbranco.com/post/android-backup/</link>
+      <pubDate>Mon, 31 Aug 2015 16:12:37 -0400</pubDate>
+      
+      <guid>http://luizbranco.com/post/android-backup/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; Fast way to backup an android device on Linux using the USB cable, MTP
+and rsync&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/MTP&#34;&gt;Media Transfer Protocol&lt;/a&gt; is available
+on most Android devices as the primary method for USB synchronization. On Linux
+there are several implementations of MTP on top of libmtp.&lt;/p&gt;
+
+&lt;p&gt;On Nexus 5 both mtpfs and jmtps were &lt;em&gt;extremely&lt;/em&gt; slow copying files. On this
+device, &lt;a href=&#34;https://github.com/hanwen/go-mtpfs&#34;&gt;go-mtpfs&lt;/a&gt; had the best performance
+by far copying 9gb of data, but your mileage may vary.&lt;/p&gt;
+
+&lt;p&gt;Assuming that you have &lt;code&gt;go-mtpfs&lt;/code&gt; and &lt;code&gt;rsync&lt;/code&gt; installed and the device is
+connected:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;mkdir -p ~/mnt ~/backup
+
+go-mtpfs ~/mnt &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;amp;&lt;/span&gt;
+
+rsync -rP ~/mnt ~/backup
+
+fusemount -u ~/mnt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;-rP&lt;/code&gt; on rsync stands for recursive and with progress. It&amp;rsquo;s worth checking the
+documentation for additional flags that might be useful to you. &lt;code&gt;-c&lt;/code&gt; can be
+used for recurrent backups to avoid copying files already on disk by computing
+their checksum.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>gtt - git time tracker</title>
+      <link>http://luizbranco.com/post/gtt/</link>
+      <pubDate>Sun, 16 Aug 2015 20:26:20 -0400</pubDate>
+      
+      <guid>http://luizbranco.com/post/gtt/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; If you code and need to create regular invoices of your working hours,
+you might want to give gtt a try.&lt;/p&gt;
+
+&lt;h2 id=&#34;what-is-gtt:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;What is gtt&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;g&lt;/strong&gt;it &lt;strong&gt;t&lt;/strong&gt;ime &lt;strong&gt;t&lt;/strong&gt;racker is a simple program that allows you to track how
+much time you spend coding per day and, at the end of a period, generate an
+invoice. Even though it has git on its name, gtt can work with any version
+control system that supports commit hooks or by directly issuing commands from
+the terminal.&lt;/p&gt;
+
+&lt;h2 id=&#34;how-it-works:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;How it works&lt;/h2&gt;
+
+&lt;p&gt;Assuming you have downloaded &lt;a href=&#34;http://github.com/luizbranco/gtt/releases&#34;&gt;gtt&lt;/a&gt;
+and you have added it to your PATH, this is an example of a workflow:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #75715e&#34;&gt;# creates a .gtt file in the current directory&lt;/span&gt;
+gtt init
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# adds a hook to .git/hooks/commit-msg&lt;/span&gt;
+gtt hook git
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# starts the current day&lt;/span&gt;
+gtt start
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# ...&lt;/span&gt;
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# tracks the first line of the commit message and when it was made&lt;/span&gt;
+git commit -m &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fix bug #42&amp;quot;&lt;/span&gt;
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# ...&lt;/span&gt;
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# pauses the tracking time&lt;/span&gt;
+gtt pause
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# ... grabbing lunch :)&lt;/span&gt;
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# resumes the time&lt;/span&gt;
+gtt resume
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# tracks a task manually (that is what the commit hook uses under the hood)&lt;/span&gt;
+gtt task &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;attending a very productive meeting&amp;quot;&lt;/span&gt;
+
+&lt;span style=&#34;color: #75715e&#34;&gt;# displays how much time was spent between the start of the day and the last task, excluding pauses&lt;/span&gt;
+gtt status
+&amp;gt; &lt;span style=&#34;color: #f92672&#34;&gt;[&lt;/span&gt;STATUS&lt;span style=&#34;color: #f92672&#34;&gt;]&lt;/span&gt; 2h35m
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3 id=&#34;generating-an-invoice:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;Generating an invoice&lt;/h3&gt;
+
+&lt;p&gt;gtt can create a simple invoice between two periods as a html page:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #75715e&#34;&gt;# outputs an html invoice to stdout, you can the write to a file&lt;/span&gt;
+gtt invoice --from&lt;span style=&#34;color: #f92672&#34;&gt;=&lt;/span&gt;2015-08-01 --to&lt;span style=&#34;color: #f92672&#34;&gt;=&lt;/span&gt;2015-08-31 --cost-per-hour&lt;span style=&#34;color: #f92672&#34;&gt;=&lt;/span&gt;1.00 &amp;gt; invoice.html
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id=&#34;why-i-created-gtt:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;Why I created gtt&lt;/h2&gt;
+
+&lt;p&gt;Almost four years ago I started working remotely for &lt;a href=&#34;http://www.replaypoker.com&#34;&gt;Replay
+Poker&lt;/a&gt; and I needed to keep track of my hours
+worked.  Since my schedule was very flexible, it was important to record the
+duration of tasks and breaks. At first I said: &amp;ldquo;this is simple, I just need a
+spreadsheet&amp;rdquo;. That approach was a failure from the start&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Every day I would forget to update the spreadsheet and I would need to go back
+to my commit history or messages on the team chat to fix missing time periods.
+Then instead of days, it became weeks and, finally the whole month.&lt;/p&gt;
+
+&lt;p&gt;Since most my tasks were reflected as git commits, I then decided to use the
+commit message and timestamp as the basic unit to keep track of my time, while
+having a easy way to input other tasks, such as meetings, and pauses.&lt;/p&gt;
+
+&lt;h2 id=&#34;gtt-v1:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;gtt v1&lt;/h2&gt;
+
+&lt;p&gt;On September 14th, 2012 the first version of gtt was born. It consisted of two
+parts: the &lt;a href=&#34;https://github.com/luizbranco/gtt-v1-cli&#34;&gt;cli&lt;/a&gt;, written in ruby, and
+the &lt;a href=&#34;https://github.com/luizbranco/gtt-v1-server&#34;&gt;server&lt;/a&gt; in nodejs with CouchDB
+as the database running locally.&lt;/p&gt;
+
+&lt;p&gt;Two fun facts about the first cli version:&lt;/p&gt;
+
+&lt;p&gt;1) The &lt;code&gt;start&lt;/code&gt; &lt;code&gt;end&lt;/code&gt; &lt;code&gt;pause&lt;/code&gt; &lt;code&gt;resume&lt;/code&gt; commands were integrated with
+&lt;a href=&#34;https://campfirenow.com/&#34;&gt;Campfire&lt;/a&gt;, the chat service we used to use, and
+automatically would send messages to the &amp;ldquo;Lobby&amp;rdquo; room:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;opts&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;on(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;--start-day [CHAT_MESSAGE]&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Start a new working day&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;do&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;chat_msg&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;|&lt;/span&gt;
+  &lt;span style=&#34;color: #f8f8f2&#34;&gt;response&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;tracker&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;start_day&lt;/span&gt;
+  &lt;span style=&#34;color: #f8f8f2&#34;&gt;chat_msg&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;||=&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;#39;Morning o/&amp;#39;&lt;/span&gt;
+  &lt;span style=&#34;color: #f8f8f2&#34;&gt;talker&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;send_message(chat_msg)&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;talker&lt;/span&gt;
+&lt;span style=&#34;color: #66d9ef&#34;&gt;end&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;2) It had 0 tests :(&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;describe&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;Gtt&amp;quot;&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;do&lt;/span&gt;
+  &lt;span style=&#34;color: #f8f8f2&#34;&gt;it&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;fails&amp;quot;&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;do&lt;/span&gt;
+    &lt;span style=&#34;color: #f8f8f2&#34;&gt;fail&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;hey buddy, you should probably rename this file and start specing for real&amp;quot;&lt;/span&gt;
+  &lt;span style=&#34;color: #66d9ef&#34;&gt;end&lt;/span&gt;
+&lt;span style=&#34;color: #66d9ef&#34;&gt;end&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id=&#34;gtt-v2:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;gtt v2&lt;/h2&gt;
+
+&lt;p&gt;Two years later, on April 2014, the version 2 started to take shape. The basic
+idea for a new version was to run gtt in a SaaS style, without the need to run
+the database locally. It allowed me to share the same project across multiple
+devices and a web interface to view and generate invoices.&lt;/p&gt;
+
+&lt;p&gt;The project was then split in three parts, the
+&lt;a href=&#34;https://github.com/luizbranco/gtt-v2-cli&#34;&gt;cli&lt;/a&gt;, now written in nodejs too, the
+&lt;a href=&#34;https://github.com/luizbranco/gtt-v2-server&#34;&gt;server&lt;/a&gt; and a front-end
+&lt;a href=&#34;https://github.com/luizbranco/gtt-v2-site&#34;&gt;site&lt;/a&gt;. This last part was,
+unfortunately never finished, so the only way to generate invoice was to clone
+the repo and dump the database to create the invoice.&lt;/p&gt;
+
+&lt;p&gt;Version 2 was more a learn experience than a successful upgrade. It allowed me
+to play with javascript &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*&#34;&gt;generator
+functions&lt;/a&gt;
+and to write a better API for the server. Also, it had proper testing!&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;it&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;adds a new task&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;function&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;done&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;){&lt;/span&gt;
+  &lt;span style=&#34;color: #a6e22e&#34;&gt;co&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #66d9ef&#34;&gt;function&lt;/span&gt;&lt;span style=&#34;color: #f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color: #f8f8f2&#34;&gt;{&lt;/span&gt;
+    &lt;span style=&#34;color: #66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;response&lt;/span&gt; &lt;span style=&#34;color: #f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #66d9ef&#34;&gt;yield&lt;/span&gt; &lt;span style=&#34;color: #a6e22e&#34;&gt;model&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;addTask&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;important task&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt;
+    &lt;span style=&#34;color: #a6e22e&#34;&gt;assert&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;deepEqual&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color: #a6e22e&#34;&gt;response&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color: #e6db74&#34;&gt;&amp;quot;OK&amp;quot;&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;);&lt;/span&gt;
+    &lt;span style=&#34;color: #a6e22e&#34;&gt;done&lt;/span&gt;&lt;span style=&#34;color: #f8f8f2&#34;&gt;();&lt;/span&gt;
+  &lt;span style=&#34;color: #f8f8f2&#34;&gt;})();&lt;/span&gt;
+&lt;span style=&#34;color: #f8f8f2&#34;&gt;});&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id=&#34;gtt-v3:cea081d7e3b6984eb4e59d1cc6676f8a&#34;&gt;gtt v3&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://github.com/luizbranco/gtt&#34;&gt;Version 3&lt;/a&gt; was recently launched and it is
+still a working in progress. It removes every non-essential part of the tool and
+simplify its design:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Instead of a database it uses a regular file to store the daily log. This
+allows offline access, privacy, easy backup and sharing the same &lt;code&gt;.gtt&lt;/code&gt; file
+using symbolic links;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The invoice generation is also embedded in the application and it allows
+custom date ranges. Up to version 2 only full months were allowed;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The whole tool is a cross-platform single executable written in
+&lt;a href=&#34;http://golang.org&#34;&gt;go&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If gtt can facilitate your billing workflow, please share your ideas on the
+&lt;a href=&#34;http://github.com/luizbranco/gtt/issues&#34;&gt;issues&lt;/a&gt; page.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

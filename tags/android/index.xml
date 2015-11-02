@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Android on Luiz Branco - software tinkerer</title>
+    <link>http://luizbranco.com/tags/android/</link>
+    <description>Recent content in Android on Luiz Branco - software tinkerer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 31 Aug 2015 16:12:37 -0400</lastBuildDate>
+    <atom:link href="http://luizbranco.com/tags/android/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Android backup using MTP</title>
+      <link>http://luizbranco.com/post/android-backup/</link>
+      <pubDate>Mon, 31 Aug 2015 16:12:37 -0400</pubDate>
+      
+      <guid>http://luizbranco.com/post/android-backup/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;TL/DR&lt;/strong&gt; Fast way to backup an android device on Linux using the USB cable, MTP
+and rsync&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/MTP&#34;&gt;Media Transfer Protocol&lt;/a&gt; is available
+on most Android devices as the primary method for USB synchronization. On Linux
+there are several implementations of MTP on top of libmtp.&lt;/p&gt;
+
+&lt;p&gt;On Nexus 5 both mtpfs and jmtps were &lt;em&gt;extremely&lt;/em&gt; slow copying files. On this
+device, &lt;a href=&#34;https://github.com/hanwen/go-mtpfs&#34;&gt;go-mtpfs&lt;/a&gt; had the best performance
+by far copying 9gb of data, but your mileage may vary.&lt;/p&gt;
+
+&lt;p&gt;Assuming that you have &lt;code&gt;go-mtpfs&lt;/code&gt; and &lt;code&gt;rsync&lt;/code&gt; installed and the device is
+connected:&lt;/p&gt;
+
+&lt;div class=&#34;highlight&#34; style=&#34;background: #272822&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;mkdir -p ~/mnt ~/backup
+
+go-mtpfs ~/mnt &lt;span style=&#34;color: #f8f8f2&#34;&gt;&amp;amp;&lt;/span&gt;
+
+rsync -rP ~/mnt ~/backup
+
+fusemount -u ~/mnt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;-rP&lt;/code&gt; on rsync stands for recursive and with progress. It&amp;rsquo;s worth checking the
+documentation for additional flags that might be useful to you. &lt;code&gt;-c&lt;/code&gt; can be
+used for recurrent backups to avoid copying files already on disk by computing
+their checksum.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
